@@ -1,22 +1,25 @@
 import { db, storage } from '@/firebase';
 import { fbUpdateArea } from '@/firebase-api/areas';
 import { fbAddTree, fbUpdateTree } from '@/firebase-api/trees';
-import { createTree, updateArea, updateTree } from '@/redux/reducers/app';
+import { createTree, setSelectedPosition, setSelectedTree, updateArea, updateTree } from '@/redux/reducers/app';
 import { useAppSelector } from '@/redux/store';
 import { generateId } from '@/utils/helpers';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Modal, Upload } from 'antd';
+import { InboxOutlined, LoadingOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Modal, Select, Upload } from 'antd';
+import { Option } from 'antd/es/mentions';
 import { RcFile, UploadChangeParam, UploadFile, UploadProps } from 'antd/es/upload';
 import { collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
-import { useState } from 'react';
+import { ChangeEvent, Fragment, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFunction }) => {
     const dispatch = useDispatch();
     const { selectedBarangay, selectedPosition, selectedTree } = useAppSelector((state) => state.app);
     const isUpdate = selectedTree?.id;
+
+    const [form] = Form.useForm<TreeProps>();
 
     const [treeData, setTreeData] = useState<TreeProps>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -34,23 +37,47 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
             });
             img = await getDownloadURL(uploadTask.ref);
         }
+
+        const barangay = selectedBarangay || values.barangay;
+        const q = await getDocs(query(collection(db, 'areas'), where('name', '==', barangay)));
+        const area: any = q.docs.map((item) => ({ id: item.id, ...item.data() }));
+
         if (isUpdate) {
             result = await fbUpdateTree({
                 ...values,
+                id: selectedTree.id,
+                path: selectedTree.path,
                 image: img || values.image,
+                dateAdded: selectedTree.dateAdded,
                 dateUpdated: new Date().getTime()
             });
             dispatch(updateTree(result!));
+
+            const trees = values.status === 'removed' ? (area[0].trees || 0) - 1 : values.status;
+            await fbUpdateArea({
+                id: area[0].id,
+                trees,
+                color: area[0].color,
+                name: area[0].name,
+                paths: area[0].paths
+            });
+            dispatch(
+                updateArea({
+                    id: area[0].id,
+                    trees,
+                    color: area[0].color,
+                    name: area[0].name,
+                    paths: area[0].paths
+                })
+            );
         } else {
             result = await fbAddTree({
                 ...values,
                 image: img,
+                status: 'good-condition',
                 path: selectedPosition,
                 dateAdded: new Date().getTime()
             });
-            const barangay = selectedBarangay || values.barangay;
-            const q = await getDocs(query(collection(db, 'areas'), where('name', '==', barangay)));
-            const area: any = q.docs.map((item) => ({ id: item.id, ...item.data() }));
 
             await fbUpdateArea({
                 id: area[0].id,
@@ -73,15 +100,17 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
 
         setSelectedPhoto(undefined);
         setSubmitting(false);
+        dispatch(setSelectedTree(undefined));
+        dispatch(setSelectedPosition({ lat: 0, lng: 0 }));
         handleClose();
     };
 
     const initialValues: TreeProps = {
-        name: '',
-        image: '',
-        path: { lat: 0, lng: 0 },
-        barangay: selectedBarangay || treeData?.barangay!,
-        status: 'good-condition'
+        name: isUpdate ? selectedTree?.name : '',
+        image: isUpdate ? selectedTree?.image : '',
+        path: isUpdate ? selectedTree?.path : { lat: 0, lng: 0 },
+        barangay: isUpdate ? selectedTree?.barangay! : selectedBarangay,
+        status: isUpdate ? selectedTree?.status : 'good-condition'
     };
 
     const getBase64 = (img: RcFile, callback: (url: string) => void) => {
@@ -118,6 +147,13 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
     const onHandleCancel = () => {
         if (submitting) return;
         else handleClose();
+        setSelectedPhoto(undefined);
+        dispatch(setSelectedTree(undefined));
+        dispatch(setSelectedPosition({ lat: 0, lng: 0 }));
+    };
+
+    const onSelectStatus = (value: 'good-condition' | 'removed') => {
+        form.setFieldsValue({ status: value });
     };
 
     const UploadButton = (
@@ -128,7 +164,13 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
     );
 
     return (
-        <Modal title="Add Tree" open={open} footer={null} destroyOnClose onCancel={onHandleCancel}>
+        <Modal
+            title={isUpdate ? 'Update Tree' : 'Add Tree'}
+            open={open}
+            footer={null}
+            destroyOnClose
+            onCancel={onHandleCancel}
+        >
             <Form
                 name="basic"
                 initialValues={initialValues}
@@ -139,27 +181,38 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 className="w-full flex flex-col items-center justify-center"
             >
                 <Form.Item<TreeProps>
-                    className={treeData?.image ? 'w-full' : ''}
+                    className={selectedTree?.image ? 'w-full' : ''}
                     name="image"
                     rules={[{ required: true, message: 'Please select an image!' }]}
                 >
-                    {!treeData?.image ? (
-                        <Upload
-                            name="avatar"
-                            listType="picture-card"
-                            className="avatar-uploader"
-                            showUploadList={false}
-                            action="https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188"
-                            beforeUpload={beforeUpload}
-                            onChange={handleChange}
-                        >
-                            {UploadButton}
-                        </Upload>
-                    ) : (
-                        <div className="w-full h-[300px] relative bg-black">
-                            <Image src={treeData.image} fill objectFit="contain" alt="image" />
-                        </div>
-                    )}
+                    <div className="w-full flex items-center justify-center">
+                        <label className="w-full">
+                            <input
+                                type="file"
+                                className="hidden"
+                                style={{ visibility: 'hidden' }}
+                                accept=".png, .jpg, .jpeg"
+                                onChange={(evt: ChangeEvent<HTMLInputElement>) => {
+                                    if (evt.target.files) {
+                                        const file = evt.target.files[0];
+                                        const url = URL.createObjectURL(file);
+                                        setSelectedPhoto(file);
+                                        dispatch(setSelectedTree({ ...selectedTree!, image: url }));
+                                    }
+                                }}
+                            />
+                            <div className="w-full h-[300px] flex flex-col items-center justify-center rounded-[12px] cursor-pointer">
+                                {selectedTree?.image ? (
+                                    <Image src={selectedTree.image} fill alt="image" objectFit="contain" />
+                                ) : (
+                                    <Fragment>
+                                        <InboxOutlined className="text-[50px]" />
+                                        <p className="text-[14px] font-normal">Upload Tree Photo</p>
+                                    </Fragment>
+                                )}
+                            </div>
+                        </label>
+                    </div>
                 </Form.Item>
                 <Form.Item<TreeProps>
                     className="w-full"
@@ -169,6 +222,14 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 >
                     <Input size="large" />
                 </Form.Item>
+                {isUpdate && (
+                    <Form.Item<TreeProps> className="w-full" name="status" label="Status">
+                        <Select size="large" placeholder="Select Status" onChange={onSelectStatus} allowClear>
+                            <Option value="good-condition">Good Condition</Option>
+                            <Option value="removed">Removed</Option>
+                        </Select>
+                    </Form.Item>
+                )}
                 <Form.Item<TreeProps> className="w-full" label="Barangay" name="barangay">
                     <Input size="large" disabled />
                 </Form.Item>

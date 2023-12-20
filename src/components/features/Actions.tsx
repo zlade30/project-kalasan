@@ -4,7 +4,7 @@ import { Button } from 'antd';
 import React from 'react';
 import { useDispatch } from 'react-redux';
 
-const Actions = () => {
+const Actions = ({ handleReset }: { handleReset: VoidFunction }) => {
     const dispatch = useDispatch();
 
     const handleAddTree = () => {
@@ -17,7 +17,7 @@ const Actions = () => {
                 <Button onClick={handleAddTree} size="large" icon={<PlusOutlined />}>
                     Add Tree
                 </Button>
-                <Button size="large" icon={<EyeOutlined />}>
+                <Button onClick={handleReset} size="large" icon={<EyeOutlined />}>
                     Reset View
                 </Button>
             </div>

@@ -1,12 +1,11 @@
 'use client';
 
-import { GoogleMap, InfoBox, InfoWindow, Libraries, Marker, Polygon, useJsApiLoader } from '@react-google-maps/api';
-import { useCallback, useState } from 'react';
+import { GoogleMap, InfoWindow, Libraries, Marker, Polygon, useJsApiLoader } from '@react-google-maps/api';
+import { Fragment, useCallback, useRef, useState } from 'react';
 import { Alert, Button, Spin } from 'antd';
 import { fbAddArea, fbGetAreas } from '@/firebase-api/areas';
-import { Actions, Dashboard } from '@/components/features';
+import { Actions, AddTree, Dashboard } from '@/components/features';
 import treeIcon from '@/public/images/tree.png';
-import AddTree from '@/components/features/AddTree';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import {
@@ -15,6 +14,7 @@ import {
     setSelectedPosition,
     setSelectedTree,
     setShowAddTree,
+    setShowAddTreeInfo,
     setTrees
 } from '@/redux/reducers/app';
 import { fbGetTrees } from '@/firebase-api/trees';
@@ -31,11 +31,12 @@ const Page = () => {
         libraries
     });
     const dispatch = useDispatch();
-
+    const mapRef = useRef<GoogleMap>(null);
     const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition } = useAppSelector((state) => state.app);
 
     const [kisolonArea, setKisolonArea] = useState<AreaProps>();
     const [barangays, setBarangays] = useState<{ value: string; label: string }[]>();
+    const [map, setMap] = useState<google.maps.Map | null>();
 
     const mapOptions: google.maps.MapOptions = {
         styles: [
@@ -66,10 +67,9 @@ const Page = () => {
         streetViewControl: false
     };
 
-    const [map, setMap] = useState<google.maps.Map | null>();
     const center = {
-        lat: 8.290156,
-        lng: 124.86833
+        lat: 8.25089433379534,
+        lng: 124.96775323302153
     };
 
     const onLoad = useCallback(function callback(map: google.maps.Map) {
@@ -79,29 +79,9 @@ const Page = () => {
         setMap(map);
     }, []);
 
-    const onPolygonComplete = async (polygon: google.maps.Polygon) => {
-        const paths = polygon
-            .getPath()
-            .getArray()
-            .map((latLng) => {
-                return { lat: latLng.lat(), lng: latLng.lng() };
-            });
-
-        await fbAddArea({
-            name: 'Intavas',
-            color: 'green',
-            paths
-        });
-    };
-
     const getAreas = async (map: google.maps.Map) => {
         const list = await fbGetAreas();
         const kisolon = list.find((area) => area.name === 'Kisolon');
-        let bounds = new google.maps.LatLngBounds();
-        kisolon?.paths.forEach((point) => {
-            bounds.extend(new google.maps.LatLng(point.lat, point.lng));
-        });
-        map.fitBounds(bounds);
         map.setZoom(12);
         setKisolonArea(kisolon);
         setBarangays(list.map((area) => ({ value: area.name, label: area.name })));
@@ -119,6 +99,7 @@ const Page = () => {
             dispatch(setSelectedBarangay(area.name));
             dispatch(setSelectedPosition({ lat: clickedPaths!.lat(), lng: clickedPaths!.lng() }));
             dispatch(setShowAddTree(true));
+            dispatch(setShowAddTreeInfo(false));
         }
     };
 
@@ -132,8 +113,23 @@ const Page = () => {
         dispatch(setTrees(update));
     };
 
+    const handleMapDrag = () => {
+        const mapCenter = map?.getCenter();
+        console.log({
+            lat: mapCenter!.lat(),
+            lng: mapCenter!.lng()
+        });
+    };
+
     return isLoaded ? (
-        <GoogleMap id="google-map-script" mapContainerClassName="w-full h-full" onLoad={onLoad} options={mapOptions}>
+        <GoogleMap
+            id="google-map-script"
+            mapContainerClassName="w-full h-full"
+            onLoad={onLoad}
+            options={mapOptions}
+            onDragEnd={handleMapDrag}
+            center={center}
+        >
             <AddTree open={showAddTree} handleClose={() => dispatch(setShowAddTree(false))} />
             <Polygon
                 paths={kisolonArea?.paths}
@@ -148,57 +144,68 @@ const Page = () => {
                     paths={area.paths}
                     options={{
                         fillColor: area.color,
-                        strokeOpacity: 0
+                        strokeOpacity: showAddTreeInfo ? 1 : 0,
+                        strokeColor: showAddTreeInfo ? area.color : ''
                     }}
                     onClick={handleClickedArea(area)}
                 />
             ))}
-            <Actions />
+            <Actions
+                handleReset={() => {
+                    map?.setCenter(center);
+                    map?.setZoom(12);
+                }}
+            />
             {trees.map((tree) => (
-                <Marker
-                    key={tree.id}
-                    position={tree.path}
-                    icon={{ url: treeIcon.src, scaledSize: new window.google.maps.Size(35, 35) }}
-                    onClick={() => handleSelectedTree(tree)}
-                >
-                    {tree.showInfo && (
-                        <InfoWindow position={tree.path} onCloseClick={() => handleCloseWindow(tree)}>
-                            <div className="w-[400px] h-[300px]">
-                                <div className="w-full h-[200px] bg-black relative">
-                                    <Image src={tree.image} alt="image" fill objectFit="contain" />
-                                </div>
-                                <div className="flex items-end justify-between">
-                                    <div className="flex flex-col gap-[5px] py-[10px]">
-                                        <div className="flex items-center text-[14px] gap-[10px]">
-                                            <p className="font-medium">Tree Name:</p>
-                                            <p className="font-normal">{tree.name}</p>
+                <Fragment key={tree.id}>
+                    {tree.status !== 'removed' && (
+                        <Marker
+                            position={tree.path}
+                            icon={{ url: treeIcon.src, scaledSize: new window.google.maps.Size(35, 35) }}
+                            onClick={() => handleSelectedTree(tree)}
+                        >
+                            {tree.showInfo && (
+                                <InfoWindow position={tree.path} onCloseClick={() => handleCloseWindow(tree)}>
+                                    <div className="w-[400px] h-[300px]">
+                                        <div className="w-full h-[200px] bg-black relative">
+                                            <Image src={tree.image} alt="image" fill objectFit="contain" />
                                         </div>
-                                        <div className="flex items-center text-[14px] gap-[10px]">
-                                            <p className="font-medium">Date Planted:</p>
-                                            <p className="font-normal">{formatDate(new Date(tree.dateAdded!))}</p>
-                                        </div>
-                                        <div className="flex items-center text-[14px] gap-[10px]">
-                                            <p className="font-medium">Barangay:</p>
-                                            <p className="font-normal">{tree.barangay}</p>
+                                        <div className="flex items-end justify-between">
+                                            <div className="flex flex-col gap-[5px] py-[10px]">
+                                                <div className="flex items-center text-[14px] gap-[10px]">
+                                                    <p className="font-medium">Tree Name:</p>
+                                                    <p className="font-normal">{tree.name}</p>
+                                                </div>
+                                                <div className="flex items-center text-[14px] gap-[10px]">
+                                                    <p className="font-medium">Date Planted:</p>
+                                                    <p className="font-normal">
+                                                        {formatDate(new Date(tree.dateAdded!))}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center text-[14px] gap-[10px]">
+                                                    <p className="font-medium">Barangay:</p>
+                                                    <p className="font-normal">{tree.barangay}</p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Button
+                                                    onClick={() => {
+                                                        dispatch(setSelectedTree(tree));
+                                                        dispatch(setShowAddTree(true));
+                                                    }}
+                                                    size="middle"
+                                                    icon={<EditOutlined />}
+                                                >
+                                                    Update Tree
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <Button
-                                            onClick={() => {
-                                                dispatch(setSelectedTree(tree));
-                                                dispatch(setShowAddTree(true));
-                                            }}
-                                            size="middle"
-                                            icon={<EditOutlined />}
-                                        >
-                                            Update Tree
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </InfoWindow>
+                                </InfoWindow>
+                            )}
+                        </Marker>
                     )}
-                </Marker>
+                </Fragment>
             ))}
             {selectedPosition && (
                 <Marker

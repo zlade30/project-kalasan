@@ -20,11 +20,16 @@ declare global {
         id?: string;
         name: string;
         path: google.maps.LatLng | google.maps.LatLngLiteral;
-        status: 'cut' | 'good-condition';
+        status: 'removed' | 'good-condition';
         barangay: string;
         dateAdded?: number;
         dateUpdated?: number;
         image: string;
         showInfo?: boolean;
+    }
+
+    type ReportProps = {
+        area: AreaProps,
+        trees: TreesProps[]
     }
 }

@@ -32,6 +32,7 @@ export const fbDeleteTree = async (id: string) => {
 
 export const fbUpdateTree = async (tree: TreeProps) => {
     try {
+        console.log(tree);
         await updateDoc(doc(db, 'trees', tree.id!), { ...tree })
         return tree;
     } catch (error) {

@@ -8,6 +8,7 @@ type InitialStateProps = {
     selectedBarangay: string;
     selectedTree: TreeProps | undefined;
     areas: AreaProps[];
+    reportData: ReportProps | undefined;
 };
 
 const initialState: InitialStateProps = {
@@ -17,7 +18,8 @@ const initialState: InitialStateProps = {
     selectedPosition: { lat: 0, lng: 0 },
     selectedBarangay: '',
     selectedTree: undefined,
-    areas: []
+    areas: [],
+    reportData: undefined
 };
 
 export const slice = createSlice({
@@ -39,7 +41,7 @@ export const slice = createSlice({
         setSelectedBarangay: (state, action: PayloadAction<string>) => {
             state.selectedBarangay = action.payload
         },
-        setSelectedTree: (state, action: PayloadAction<TreeProps>) => {
+        setSelectedTree: (state, action: PayloadAction<TreeProps | undefined>) => {
             state.selectedTree = action.payload
         },
         createTree: (state, action: PayloadAction<TreeProps>) => {
@@ -63,6 +65,9 @@ export const slice = createSlice({
         updateArea: (state, action: PayloadAction<AreaProps>) => {
             state.areas = state.areas.map((item) => item.id === action.payload.id ? { ...action.payload } : item)
         },
+        setReportData: (state, action: PayloadAction<ReportProps>) => {
+            state.reportData = action.payload
+        },
     }
 });
 
@@ -79,7 +84,8 @@ export const {
     createArea,
     removeArea,
     setAreas,
-    updateArea
+    updateArea,
+    setReportData
 } = slice.actions;
 
 export default slice.reducer;
