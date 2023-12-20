@@ -175,7 +175,10 @@ const Page = () => {
                     position={tree.path}
                     icon={{
                         url: tree.status === 'removed' ? cutTreeIcon.src : treeIcon.src,
-                        scaledSize: new window.google.maps.Size(35, 35)
+                        scaledSize:
+                            tree.status === 'removed'
+                                ? new window.google.maps.Size(30, 30)
+                                : new window.google.maps.Size(35, 35)
                     }}
                     onClick={() => handleSelectedTree(tree)}
                 >
@@ -190,6 +193,10 @@ const Page = () => {
                                         <div className="flex items-center text-[14px] gap-[10px]">
                                             <p className="font-medium">Tree Name:</p>
                                             <p className="font-normal">{tree.name}</p>
+                                        </div>
+                                        <div className="flex items-center text-[14px] gap-[10px]">
+                                            <p className="font-medium">Status:</p>
+                                            <p className="font-normal">{tree.status}</p>
                                         </div>
                                         <div className="flex items-center text-[14px] gap-[10px]">
                                             <p className="font-medium">Date Planted:</p>
