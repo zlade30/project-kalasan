@@ -22,6 +22,7 @@ import { fbGetTrees } from '@/firebase-api/trees';
 import Image from 'next/image';
 import { account, formatDate } from '@/utils/helpers';
 import { EditOutlined } from '@ant-design/icons';
+import { cutTreeIcon } from '@/public/images';
 
 const libraries: Libraries = ['drawing', 'places'];
 
@@ -169,57 +170,55 @@ const Page = () => {
                 }}
             />
             {trees.map((tree) => (
-                <Fragment key={tree.id}>
-                    {tree.status !== 'removed' && (
-                        <Marker
-                            position={tree.path}
-                            icon={{ url: treeIcon.src, scaledSize: new window.google.maps.Size(35, 35) }}
-                            onClick={() => handleSelectedTree(tree)}
-                        >
-                            {tree.showInfo && (
-                                <InfoWindow position={tree.path} onCloseClick={() => handleCloseWindow(tree)}>
-                                    <div className="w-[400px] h-[300px]">
-                                        <div className="w-full h-[200px] bg-black relative">
-                                            <Image src={tree.image} alt="image" fill objectFit="contain" />
+                <Marker
+                    key={tree.id}
+                    position={tree.path}
+                    icon={{
+                        url: tree.status === 'removed' ? cutTreeIcon.src : treeIcon.src,
+                        scaledSize: new window.google.maps.Size(35, 35)
+                    }}
+                    onClick={() => handleSelectedTree(tree)}
+                >
+                    {tree.showInfo && (
+                        <InfoWindow position={tree.path} onCloseClick={() => handleCloseWindow(tree)}>
+                            <div className="w-[400px] h-[300px]">
+                                <div className="w-full h-[200px] bg-black relative">
+                                    <Image src={tree.image} alt="image" fill objectFit="contain" />
+                                </div>
+                                <div className="flex items-end justify-between">
+                                    <div className="flex flex-col gap-[5px] py-[10px]">
+                                        <div className="flex items-center text-[14px] gap-[10px]">
+                                            <p className="font-medium">Tree Name:</p>
+                                            <p className="font-normal">{tree.name}</p>
                                         </div>
-                                        <div className="flex items-end justify-between">
-                                            <div className="flex flex-col gap-[5px] py-[10px]">
-                                                <div className="flex items-center text-[14px] gap-[10px]">
-                                                    <p className="font-medium">Tree Name:</p>
-                                                    <p className="font-normal">{tree.name}</p>
-                                                </div>
-                                                <div className="flex items-center text-[14px] gap-[10px]">
-                                                    <p className="font-medium">Date Planted:</p>
-                                                    <p className="font-normal">
-                                                        {formatDate(new Date(tree.dateAdded!))}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center text-[14px] gap-[10px]">
-                                                    <p className="font-medium">Barangay:</p>
-                                                    <p className="font-normal">{tree.barangay}</p>
-                                                </div>
-                                            </div>
-                                            {currentAccount && (
-                                                <div>
-                                                    <Button
-                                                        onClick={() => {
-                                                            dispatch(setSelectedTree(tree));
-                                                            dispatch(setShowAddTree(true));
-                                                        }}
-                                                        size="middle"
-                                                        icon={<EditOutlined />}
-                                                    >
-                                                        Update Tree
-                                                    </Button>
-                                                </div>
-                                            )}
+                                        <div className="flex items-center text-[14px] gap-[10px]">
+                                            <p className="font-medium">Date Planted:</p>
+                                            <p className="font-normal">{formatDate(new Date(tree.dateAdded!))}</p>
+                                        </div>
+                                        <div className="flex items-center text-[14px] gap-[10px]">
+                                            <p className="font-medium">Barangay:</p>
+                                            <p className="font-normal">{tree.barangay}</p>
                                         </div>
                                     </div>
-                                </InfoWindow>
-                            )}
-                        </Marker>
+                                    {currentAccount && (
+                                        <div>
+                                            <Button
+                                                onClick={() => {
+                                                    dispatch(setSelectedTree(tree));
+                                                    dispatch(setShowAddTree(true));
+                                                }}
+                                                size="middle"
+                                                icon={<EditOutlined />}
+                                            >
+                                                Update Tree
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </InfoWindow>
                     )}
-                </Fragment>
+                </Marker>
             ))}
             {selectedPosition && (
                 <Marker
