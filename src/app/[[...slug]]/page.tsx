@@ -1,15 +1,16 @@
 'use client';
 
 import { GoogleMap, InfoWindow, Libraries, Marker, Polygon, useJsApiLoader } from '@react-google-maps/api';
-import { Fragment, useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Spin } from 'antd';
 import { fbAddArea, fbGetAreas } from '@/firebase-api/areas';
-import { Actions, AddTree, Dashboard } from '@/components/features';
+import { Actions, AddTree, Dashboard, Login } from '@/components/features';
 import treeIcon from '@/public/images/tree.png';
 import { useAppSelector } from '@/redux/store';
 import { useDispatch } from 'react-redux';
 import {
     setAreas,
+    setCurrentAcount,
     setSelectedBarangay,
     setSelectedPosition,
     setSelectedTree,
@@ -19,7 +20,7 @@ import {
 } from '@/redux/reducers/app';
 import { fbGetTrees } from '@/firebase-api/trees';
 import Image from 'next/image';
-import { formatDate } from '@/utils/helpers';
+import { account, formatDate } from '@/utils/helpers';
 import { EditOutlined } from '@ant-design/icons';
 
 const libraries: Libraries = ['drawing', 'places'];
@@ -32,7 +33,9 @@ const Page = () => {
     });
     const dispatch = useDispatch();
     const mapRef = useRef<GoogleMap>(null);
-    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition } = useAppSelector((state) => state.app);
+    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition, currentAccount } = useAppSelector(
+        (state) => state.app
+    );
 
     const [kisolonArea, setKisolonArea] = useState<AreaProps>();
     const [barangays, setBarangays] = useState<{ value: string; label: string }[]>();
@@ -121,6 +124,15 @@ const Page = () => {
         });
     };
 
+    useEffect(() => {
+        console.log(localStorage.getItem('login') === 'true');
+        if (localStorage.getItem('login') === 'true') {
+            dispatch(setCurrentAcount(account));
+        } else {
+            dispatch(setCurrentAcount(undefined));
+        }
+    }, []);
+
     return isLoaded ? (
         <GoogleMap
             id="google-map-script"
@@ -187,18 +199,20 @@ const Page = () => {
                                                     <p className="font-normal">{tree.barangay}</p>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <Button
-                                                    onClick={() => {
-                                                        dispatch(setSelectedTree(tree));
-                                                        dispatch(setShowAddTree(true));
-                                                    }}
-                                                    size="middle"
-                                                    icon={<EditOutlined />}
-                                                >
-                                                    Update Tree
-                                                </Button>
-                                            </div>
+                                            {currentAccount && (
+                                                <div>
+                                                    <Button
+                                                        onClick={() => {
+                                                            dispatch(setSelectedTree(tree));
+                                                            dispatch(setShowAddTree(true));
+                                                        }}
+                                                        size="middle"
+                                                        icon={<EditOutlined />}
+                                                    >
+                                                        Update Tree
+                                                    </Button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </InfoWindow>
@@ -219,7 +233,7 @@ const Page = () => {
                     message="Please click anywhere inside the Sumilao border to add a tree."
                 />
             )}
-            <Dashboard barangays={barangays || []} />
+            {!currentAccount ? <Login /> : <Dashboard barangays={barangays || []} />}
         </GoogleMap>
     ) : (
         <div className="w-full h-full flex items-center justify-center">

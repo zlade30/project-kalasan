@@ -9,6 +9,7 @@ type InitialStateProps = {
     selectedTree: TreeProps | undefined;
     areas: AreaProps[];
     reportData: ReportProps | undefined;
+    currentAccount: { username: string, password: string } | undefined
 };
 
 const initialState: InitialStateProps = {
@@ -19,7 +20,8 @@ const initialState: InitialStateProps = {
     selectedBarangay: '',
     selectedTree: undefined,
     areas: [],
-    reportData: undefined
+    reportData: undefined,
+    currentAccount: undefined
 };
 
 export const slice = createSlice({
@@ -68,6 +70,9 @@ export const slice = createSlice({
         setReportData: (state, action: PayloadAction<ReportProps>) => {
             state.reportData = action.payload
         },
+        setCurrentAcount: (state, action: PayloadAction<AccountProps | undefined>) => {
+            state.currentAccount = action.payload
+        }
     }
 });
 
@@ -85,7 +90,8 @@ export const {
     removeArea,
     setAreas,
     updateArea,
-    setReportData
+    setReportData,
+    setCurrentAcount
 } = slice.actions;
 
 export default slice.reducer;

@@ -32,4 +32,9 @@ declare global {
         area: AreaProps,
         trees: TreesProps[]
     }
+
+    type AccountProps = {
+        username: string;
+        password: string;
+    }
 }

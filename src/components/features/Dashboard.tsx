@@ -30,7 +30,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
         return total;
     };
 
-    const memoizedHandleTotal = useMemo(() => handleTotal, [areas]);
+    const memoizedHandleTotal = useMemo(() => handleTotal, [list]);
 
     const handleSelectedBarangay = (value: string) => {
         const update = areas.filter((item) => item.name === value);
@@ -154,7 +154,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                 <div className="w-[200px] flex items-center justify-center py-[20px] border-b border-slate-400">
                     <Image className="w-[100px] h-[100px]" src={treeIcon} alt="tree-icon" />
                     <p className="text-[40px] font-bold text-green-500">
-                        {!selectedArea ? memoizedHandleTotal(areas) : treeList.length}
+                        {!selectedArea ? memoizedHandleTotal(list) : treeList.length}
                     </p>
                 </div>
                 <p className="w-[150px] text-center text-[14px]">{`as of Today ${printDate()}`}</p>

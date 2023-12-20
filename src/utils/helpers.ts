@@ -36,3 +36,8 @@ export const printDate = () => {
     const formattedDateString = `${formattedMonth}/${formattedDay}/${year} ${formattedHoursStr}:${formattedMinutesStr} ${ampm}`;
     return formattedDateString;
 }
+
+export const account = {
+    username: 'admin',
+    password: '123123123'
+}
