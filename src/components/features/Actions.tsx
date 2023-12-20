@@ -19,6 +19,7 @@ const Actions = ({ handleReset }: { handleReset: VoidFunction }) => {
         setTimeout(() => {
             setIsLoggingOut(false);
             dispatch(setCurrentAcount(undefined));
+            localStorage.clear();
         }, 1500);
     };
 
