@@ -53,7 +53,8 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
             });
             dispatch(updateTree(result!));
 
-            const trees = values.status === 'removed' ? (area[0].trees || 0) - 1 : values.status;
+            const trees = values.status === 'removed' ? (area[0].trees || 0) - 1 : area[0].trees;
+
             await fbUpdateArea({
                 id: area[0].id,
                 trees,
