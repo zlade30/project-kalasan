@@ -1,6 +1,6 @@
 import { db } from '@/firebase';
 import { treeIcon } from '@/public/images';
-import { setAreas, setReportData } from '@/redux/reducers/app';
+import { setAreas, setReportData, setSelectedPolygon } from '@/redux/reducers/app';
 import { useAppSelector } from '@/redux/store';
 import { printDate } from '@/utils/helpers';
 import { ArrowLeftOutlined, BackwardOutlined, CheckOutlined, PrinterOutlined } from '@ant-design/icons';
@@ -18,10 +18,9 @@ const filterOption = (input: string, option?: { label: string; value: string }) 
 const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[] }) => {
     const treesRef = useRef();
     const dispatch = useDispatch();
-    const { areas } = useAppSelector((state) => state.app);
+    const { areas, selectedPolygon } = useAppSelector((state) => state.app);
     const [list, setList] = useState<AreaProps[]>([]);
     const [treeList, setTreeList] = useState<TreeProps[]>([]);
-    const [selectedArea, setSelectedArea] = useState<AreaProps>();
 
     const handleTotal = (item: AreaProps[]) => {
         const total = item.reduce((accumulator, currentObject) => {
@@ -43,38 +42,38 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
 
     useEffect(() => {
         const load = async () => {
-            const list = await getDocs(query(collection(db, 'trees'), where('barangay', '==', selectedArea?.name)));
+            const list = await getDocs(query(collection(db, 'trees'), where('barangay', '==', selectedPolygon?.name)));
             const trees: any = list.docs.map((item) => ({ id: item.id, ...item.data() }));
             setTreeList(trees);
             dispatch(
                 setReportData({
-                    area: selectedArea!,
+                    area: selectedPolygon!,
                     trees
                 })
             );
         };
-        if (selectedArea) {
+        if (selectedPolygon) {
             load();
         }
-    }, [selectedArea]);
+    }, [selectedPolygon]);
 
     return (
         <div className="w-[400px] h-full p-[12px] bg-white absolute right-0 top-1/2 -translate-y-1/2 rounded-[12px]">
             <TreesReport ref={treesRef} />
             <div className="w-full h-full flex flex-col items-center gap-[10px]">
-                {!selectedArea ? (
+                {!selectedPolygon ? (
                     <p className="w-full font-medium text-[14px]">Filter Barangay</p>
                 ) : (
                     <div className="w-full">
                         <ArrowLeftOutlined
                             onClick={() => {
-                                setSelectedArea(undefined);
+                                dispatch(setSelectedPolygon(undefined));
                                 setList(areas);
                             }}
                         />
                     </div>
                 )}
-                {!selectedArea ? (
+                {!selectedPolygon ? (
                     <Select
                         showSearch
                         size="large"
@@ -88,77 +87,79 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                         onClear={() => setList(areas)}
                     />
                 ) : (
-                    <p className="w-full text-[20px] font-medium">{`Barangay ${selectedArea.name}`}</p>
+                    <p className="w-full text-[20px] font-medium">{`Barangay ${selectedPolygon.name}`}</p>
                 )}
-                <table className="w-full table-auto text-[14px] my-2">
-                    <thead className="bg-slate-100">
-                        <tr>
-                            {selectedArea ? (
-                                <th align="left" className="p-2 flex items-center gap-[8px]">
-                                    <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
-                                    <p className="font-medium">Trees</p>
-                                </th>
-                            ) : (
-                                <th align="left" className="font-medium p-2">
-                                    Barangay
-                                </th>
-                            )}
-                            {!selectedArea ? (
-                                <th align="right" className="p-2">
-                                    <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
-                                </th>
-                            ) : (
-                                <th align="right" className="font-medium p-2">
-                                    Status
-                                </th>
-                            )}
-                        </tr>
-                    </thead>
-                    {!selectedArea ? (
-                        <tbody>
-                            {list.map((area) => (
-                                <tr
-                                    key={area.id}
-                                    className="border-b border-slate-400 cursor-pointer hover:bg-slate-100"
-                                    onClick={() => setSelectedArea(area)}
-                                >
-                                    <td className="p-2" align="left">
-                                        {area.name}
-                                    </td>
-                                    <td className="p-2" align="right">
-                                        {area.trees || 0}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    ) : (
-                        <tbody>
-                            {treeList.map((tree) => (
-                                <tr key={tree.id} className="border-b border-slate-400">
-                                    <td className="p-2" align="left">
-                                        {tree.name}
-                                    </td>
-                                    <td
-                                        className={`p-2 ${
-                                            tree.status === 'removed' ? 'text-red-800' : 'text-green-800'
-                                        }`}
-                                        align="right"
+                <thead className="bg-slate-100 w-full">
+                    <tr className="flex items-center justify-between">
+                        {selectedPolygon ? (
+                            <th align="left" className="p-2 flex items-center gap-[8px]">
+                                <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
+                                <p className="font-medium">Trees</p>
+                            </th>
+                        ) : (
+                            <th align="left" className="font-medium p-2">
+                                Barangay
+                            </th>
+                        )}
+                        {!selectedPolygon ? (
+                            <th align="right" className="p-2">
+                                <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
+                            </th>
+                        ) : (
+                            <th align="right" className="font-medium p-2">
+                                Status
+                            </th>
+                        )}
+                    </tr>
+                </thead>
+                <div className="w-full h-[600px] overflow-y-auto">
+                    <table className="w-full table-auto text-[14px]">
+                        {!selectedPolygon ? (
+                            <tbody>
+                                {list.map((area) => (
+                                    <tr
+                                        key={area.id}
+                                        className="border-b border-slate-400 cursor-pointer hover:bg-slate-100"
+                                        onClick={() => dispatch(setSelectedPolygon(area))}
                                     >
-                                        {tree.status}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    )}
-                </table>
+                                        <td className="p-2" align="left">
+                                            {area.name}
+                                        </td>
+                                        <td className="p-2" align="right">
+                                            {area.trees || 0}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        ) : (
+                            <tbody>
+                                {treeList.map((tree) => (
+                                    <tr key={tree.id} className="border-b border-slate-400">
+                                        <td className="p-2" align="left">
+                                            {tree.name}
+                                        </td>
+                                        <td
+                                            className={`p-2 ${
+                                                tree.status === 'removed' ? 'text-red-800' : 'text-green-800'
+                                            }`}
+                                            align="right"
+                                        >
+                                            {tree.status}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        )}
+                    </table>
+                </div>
                 <div className="w-[200px] flex items-center justify-center py-[20px] border-b border-slate-400">
                     <Image className="w-[100px] h-[100px]" src={treeIcon} alt="tree-icon" />
                     <p className="text-[40px] font-bold text-green-500">
-                        {!selectedArea ? memoizedHandleTotal(list) : treeList.length}
+                        {!selectedPolygon ? memoizedHandleTotal(list) : treeList.length}
                     </p>
                 </div>
                 <p className="w-[150px] text-center text-[14px]">{`as of Today ${printDate()}`}</p>
-                {selectedArea && (
+                {selectedPolygon && (
                     <ReactToPrint
                         trigger={() => (
                             <Button size="large" className="w-[200px] mt-[100px]" icon={<PrinterOutlined />}>

@@ -12,6 +12,7 @@ import {
     setAreas,
     setCurrentAcount,
     setSelectedBarangay,
+    setSelectedPolygon,
     setSelectedPosition,
     setSelectedTree,
     setShowAddTree,
@@ -34,9 +35,8 @@ const Page = () => {
     });
     const dispatch = useDispatch();
     const mapRef = useRef<GoogleMap>(null);
-    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition, currentAccount } = useAppSelector(
-        (state) => state.app
-    );
+    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition, currentAccount, selectedPolygon } =
+        useAppSelector((state) => state.app);
 
     const [kisolonArea, setKisolonArea] = useState<AreaProps>();
     const [barangays, setBarangays] = useState<{ value: string; label: string }[]>();
@@ -104,6 +104,8 @@ const Page = () => {
             dispatch(setSelectedPosition({ lat: clickedPaths!.lat(), lng: clickedPaths!.lng() }));
             dispatch(setShowAddTree(true));
             dispatch(setShowAddTreeInfo(false));
+        } else {
+            dispatch(setSelectedPolygon(area));
         }
     };
 
@@ -157,8 +159,8 @@ const Page = () => {
                     paths={area.paths}
                     options={{
                         fillColor: area.color,
-                        strokeOpacity: showAddTreeInfo ? 1 : 0,
-                        strokeColor: showAddTreeInfo ? area.color : ''
+                        strokeOpacity: selectedPolygon?.id === area.id || showAddTreeInfo ? 1 : 0,
+                        strokeColor: selectedPolygon?.id === area.id || showAddTreeInfo ? area.color : ''
                     }}
                     onClick={handleClickedArea(area)}
                 />
