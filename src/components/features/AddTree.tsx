@@ -1,6 +1,7 @@
 import { db, storage } from '@/firebase';
 import { fbUpdateArea } from '@/firebase-api/areas';
 import { fbAddTree, fbUpdateTree } from '@/firebase-api/trees';
+import { treeIcon } from '@/public/images';
 import { createTree, setSelectedPosition, setSelectedTree, updateArea, updateTree } from '@/redux/reducers/app';
 import { useAppSelector } from '@/redux/store';
 import { generateId } from '@/utils/helpers';
@@ -30,13 +31,13 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
         setSubmitting(true);
         let result;
         let img = '';
-        if (selectedPhoto) {
-            const storageRef = ref(storage, `/trees/${generateId(20)}.png`);
-            const uploadTask = await uploadBytes(storageRef, selectedPhoto, {
-                contentType: 'image/png'
-            });
-            img = await getDownloadURL(uploadTask.ref);
-        }
+        // if (selectedPhoto) {
+        //     const storageRef = ref(storage, `/trees/${generateId(20)}.png`);
+        //     const uploadTask = await uploadBytes(storageRef, selectedPhoto, {
+        //         contentType: 'image/png'
+        //     });
+        //     img = await getDownloadURL(uploadTask.ref);
+        // }
 
         const barangay = selectedBarangay || values.barangay;
         const q = await getDocs(query(collection(db, 'areas'), where('name', '==', barangay)));
@@ -47,7 +48,6 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 ...values,
                 id: selectedTree.id,
                 path: selectedTree.path,
-                image: img || values.image,
                 dateAdded: selectedTree.dateAdded,
                 dateUpdated: new Date().getTime()
             });
@@ -74,7 +74,6 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
         } else {
             result = await fbAddTree({
                 ...values,
-                image: img,
                 status: 'good-condition',
                 path: selectedPosition,
                 dateAdded: new Date().getTime()
@@ -181,7 +180,7 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 layout="vertical"
                 className="w-full flex flex-col items-center justify-center"
             >
-                <Form.Item<TreeProps>
+                {/* <Form.Item<TreeProps>
                     className={selectedTree?.image ? 'w-full' : ''}
                     name="image"
                     rules={[{ required: true, message: 'Please select an image!' }]}
@@ -214,7 +213,10 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                             </div>
                         </label>
                     </div>
-                </Form.Item>
+                </Form.Item> */}
+                <div className="w-full h-[100px] flex flex-col items-center justify-center">
+                    <Image width={100} height={100} objectFit="contain" src={treeIcon} alt="image" />
+                </div>
                 <Form.Item<TreeProps>
                     className="w-full"
                     label="Name"
@@ -223,7 +225,7 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 >
                     <Input size="large" />
                 </Form.Item>
-                {isUpdate && (
+                {isUpdate && selectedTree.status !== 'removed' && (
                     <Form.Item<TreeProps> className="w-full" name="status" label="Status">
                         <Select size="large" placeholder="Select Status" onChange={onSelectStatus} allowClear>
                             <Option value="good-condition">Good Condition</Option>

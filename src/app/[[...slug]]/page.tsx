@@ -184,10 +184,10 @@ const Page = () => {
                 >
                     {tree.showInfo && (
                         <InfoWindow position={tree.path} onCloseClick={() => handleCloseWindow(tree)}>
-                            <div className="w-[400px] h-[300px]">
-                                <div className="w-full h-[200px] bg-black relative">
+                            <div className="w-[400px] py-[10px]">
+                                {/* <div className="w-full h-[200px] bg-black relative">
                                     <Image src={tree.image} alt="image" fill objectFit="contain" />
-                                </div>
+                                </div> */}
                                 <div className="flex items-end justify-between">
                                     <div className="flex flex-col gap-[5px] py-[10px]">
                                         <div className="flex items-center text-[14px] gap-[10px]">
