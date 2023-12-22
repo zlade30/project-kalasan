@@ -7,7 +7,7 @@ import { ArrowLeftOutlined, BackwardOutlined, CheckOutlined, PrinterOutlined } f
 import { Button, Select } from 'antd';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import Image from 'next/image';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import ReactToPrint from 'react-to-print';
 import { TreesReport } from '.';
@@ -34,6 +34,22 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
     const handleSelectedBarangay = (value: string) => {
         const update = areas.filter((item) => item.name === value);
         setList(update);
+    };
+
+    const tallyValuesByProperty = (arr: any, property: any) => {
+        const counts: any = {};
+
+        arr.forEach((item: any) => {
+            const key = item[property];
+
+            if (key in counts) {
+                counts[key]++;
+            } else {
+                counts[key] = 1;
+            }
+        });
+
+        return counts;
     };
 
     useEffect(() => {
@@ -112,7 +128,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                         )}
                     </tr>
                 </thead>
-                <div className="w-full h-[600px] overflow-y-auto">
+                <div className="w-full h-[400px] overflow-y-auto">
                     <table className="w-full table-auto text-[14px]">
                         {!selectedPolygon ? (
                             <tbody>
@@ -152,6 +168,36 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                         )}
                     </table>
                 </div>
+                {selectedPolygon && (
+                    <Fragment>
+                        <thead className="bg-slate-100 w-full mt-[20px]">
+                            <tr className="flex items-center justify-between">
+                                <th align="left" className="font-medium p-2">
+                                    Summary
+                                </th>
+                                <th align="right" className="p-2">
+                                    <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
+                                </th>
+                            </tr>
+                        </thead>
+                        <div className="w-full h-[400px] overflow-y-auto">
+                            <table className="w-full table-auto text-[14px]">
+                                <tbody>
+                                    {Object.entries(tallyValuesByProperty(treeList, 'name')).map(([key, value]) => (
+                                        <tr key={key} className="border-b border-slate-400">
+                                            <td className="p-2" align="left">
+                                                {key}
+                                            </td>
+                                            <td className="p-2" align="right">
+                                                {String(value)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </Fragment>
+                )}
                 <div className="w-[200px] flex items-center justify-center py-[20px] border-b border-slate-400">
                     <Image className="w-[100px] h-[100px]" src={treeIcon} alt="tree-icon" />
                     <p className="text-[40px] font-bold text-green-500">
