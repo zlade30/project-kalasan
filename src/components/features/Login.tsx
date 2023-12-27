@@ -1,4 +1,4 @@
-import { setCurrentAcount } from '@/redux/reducers/app';
+import { setCurrentAcount, setIsLogin } from '@/redux/reducers/app';
 import { account } from '@/utils/helpers';
 import { Alert, Button, Form, Input } from 'antd';
 import Password from 'antd/es/input/Password';
@@ -21,6 +21,7 @@ const Login = () => {
                 setSubmitting(false);
                 dispatch(setCurrentAcount(account));
                 localStorage.setItem('login', 'true');
+                dispatch(setIsLogin(false));
             } else {
                 setSubmitting(false);
                 setIsError(true);

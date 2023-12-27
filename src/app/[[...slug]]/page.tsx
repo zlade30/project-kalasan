@@ -11,6 +11,7 @@ import { useDispatch } from 'react-redux';
 import {
     setAreas,
     setCurrentAcount,
+    setIsLogin,
     setSelectedBarangay,
     setSelectedPolygon,
     setSelectedPosition,
@@ -35,7 +36,7 @@ const Page = () => {
     });
     const dispatch = useDispatch();
     const mapRef = useRef<GoogleMap>(null);
-    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition, currentAccount, selectedPolygon } =
+    const { areas, showAddTreeInfo, showAddTree, trees, selectedPosition, currentAccount, selectedPolygon, isLogin } =
         useAppSelector((state) => state.app);
 
     const [kisolonArea, setKisolonArea] = useState<AreaProps>();
@@ -106,6 +107,9 @@ const Page = () => {
             dispatch(setShowAddTreeInfo(false));
         } else {
             dispatch(setSelectedPolygon(area));
+            if (!currentAccount) {
+                dispatch(setIsLogin(false));
+            }
         }
     };
 
@@ -241,7 +245,7 @@ const Page = () => {
                     message="Please click anywhere inside the Sumilao border to add a tree."
                 />
             )}
-            {!currentAccount ? <Login /> : <Dashboard barangays={barangays || []} />}
+            {isLogin ? <Login /> : <Dashboard barangays={barangays || []} />}
         </GoogleMap>
     ) : (
         <div className="w-full h-full flex items-center justify-center">

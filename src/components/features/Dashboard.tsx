@@ -18,7 +18,7 @@ const filterOption = (input: string, option?: { label: string; value: string }) 
 const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[] }) => {
     const treesRef = useRef();
     const dispatch = useDispatch();
-    const { areas, selectedPolygon } = useAppSelector((state) => state.app);
+    const { areas, selectedPolygon, currentAccount } = useAppSelector((state) => state.app);
     const [list, setList] = useState<AreaProps[]>([]);
     const [treeList, setTreeList] = useState<TreeProps[]>([]);
 
@@ -205,7 +205,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                     </p>
                 </div>
                 <p className="w-[150px] text-center text-[14px]">{`as of Today ${printDate()}`}</p>
-                {selectedPolygon && (
+                {selectedPolygon && currentAccount && (
                     <ReactToPrint
                         trigger={() => (
                             <Button size="large" className="w-[200px] mt-[100px]" icon={<PrinterOutlined />}>

@@ -11,6 +11,7 @@ type InitialStateProps = {
     reportData: ReportProps | undefined;
     currentAccount: { username: string, password: string } | undefined,
     selectedPolygon: AreaProps | undefined;
+    isLogin: boolean;
 };
 
 const initialState: InitialStateProps = {
@@ -23,7 +24,8 @@ const initialState: InitialStateProps = {
     areas: [],
     reportData: undefined,
     currentAccount: undefined,
-    selectedPolygon: undefined
+    selectedPolygon: undefined,
+    isLogin: false
 };
 
 export const slice = createSlice({
@@ -77,6 +79,9 @@ export const slice = createSlice({
         },
         setSelectedPolygon: (state, action: PayloadAction<AreaProps | undefined>) => {
             state.selectedPolygon = action.payload
+        },
+        setIsLogin: (state, action: PayloadAction<boolean>) => {
+            state.isLogin = action.payload
         }
     }
 });
@@ -97,7 +102,8 @@ export const {
     updateArea,
     setReportData,
     setCurrentAcount,
-    setSelectedPolygon
+    setSelectedPolygon,
+    setIsLogin
 } = slice.actions;
 
 export default slice.reducer;

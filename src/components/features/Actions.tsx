@@ -1,4 +1,4 @@
-import { setCurrentAcount, setShowAddTreeInfo } from '@/redux/reducers/app';
+import { setCurrentAcount, setIsLogin, setShowAddTreeInfo } from '@/redux/reducers/app';
 import { useAppSelector } from '@/redux/store';
 import { EyeOutlined, LogoutOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
@@ -20,7 +20,12 @@ const Actions = ({ handleReset }: { handleReset: VoidFunction }) => {
             setIsLoggingOut(false);
             dispatch(setCurrentAcount(undefined));
             localStorage.clear();
+            dispatch(setIsLogin(false));
         }, 1500);
+    };
+
+    const handleLogin = () => {
+        dispatch(setIsLogin(true));
     };
 
     return (
@@ -34,6 +39,11 @@ const Actions = ({ handleReset }: { handleReset: VoidFunction }) => {
                 <Button onClick={handleReset} size="large" icon={<EyeOutlined />}>
                     Reset View
                 </Button>
+                {!currentAccount && (
+                    <Button onClick={handleLogin} size="large" icon={<LogoutOutlined />} loading={isLoggingOut}>
+                        Login
+                    </Button>
+                )}
                 {currentAccount && (
                     <Button onClick={handleLogout} size="large" icon={<LogoutOutlined />} loading={isLoggingOut}>
                         Logout
