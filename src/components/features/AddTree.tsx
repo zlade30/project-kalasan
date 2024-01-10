@@ -238,7 +238,7 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 </Form.Item>
                 <Form.Item<TreeProps>
                     className="w-full"
-                    label="Name"
+                    label="Type of Tree"
                     name="name"
                     rules={[{ required: true, message: 'Please input a tree name!' }]}
                 >

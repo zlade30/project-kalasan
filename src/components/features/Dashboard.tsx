@@ -170,6 +170,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                         )}
                     </table>
                 </div>
+                {!selectedPolygon && <p>{`Total Barangay: ${barangays.length}`}</p>}
                 {selectedPolygon && (
                     <Fragment>
                         <thead className="bg-slate-100 w-full mt-[20px]">
