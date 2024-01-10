@@ -197,6 +197,10 @@ const Page = () => {
                                 <div className="flex items-end justify-between">
                                     <div className="flex flex-col gap-[5px] py-[10px]">
                                         <div className="flex items-center text-[14px] gap-[10px]">
+                                            <p className="font-medium">#:</p>
+                                            <p className="font-normal">{tree.key}</p>
+                                        </div>
+                                        <div className="flex items-center text-[14px] gap-[10px]">
                                             <p className="font-medium">Tree Name:</p>
                                             <p className="font-normal">{tree.name}</p>
                                         </div>

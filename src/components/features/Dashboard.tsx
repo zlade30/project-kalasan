@@ -5,7 +5,7 @@ import { useAppSelector } from '@/redux/store';
 import { printDate } from '@/utils/helpers';
 import { ArrowLeftOutlined, BackwardOutlined, CheckOutlined, PrinterOutlined } from '@ant-design/icons';
 import { Button, Select } from 'antd';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import Image from 'next/image';
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -60,7 +60,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
         const load = async () => {
             const list = await getDocs(query(collection(db, 'trees'), where('barangay', '==', selectedPolygon?.name)));
             const trees: any = list.docs.map((item) => ({ id: item.id, ...item.data() }));
-            setTreeList(trees);
+            setTreeList(trees.sort((a: any, b: any) => a.key - b.key));
             dispatch(
                 setReportData({
                     area: selectedPolygon!,
@@ -109,6 +109,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                     <tr className="flex items-center justify-between">
                         {selectedPolygon ? (
                             <th align="left" className="p-2 flex items-center gap-[8px]">
+                                <p className="font-medium">#</p>
                                 <Image className="w-[20px] h-[20px]" src={treeIcon} alt="tree-icon" />
                                 <p className="font-medium">Trees</p>
                             </th>
@@ -139,7 +140,7 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                                         onClick={() => dispatch(setSelectedPolygon(area))}
                                     >
                                         <td className="p-2" align="left">
-                                            {area.name}
+                                            <p>{area.name}</p>
                                         </td>
                                         <td className="p-2" align="right">
                                             {area.trees || 0}
@@ -151,8 +152,9 @@ const Dashboard = ({ barangays }: { barangays: { value: string; label: string }[
                             <tbody>
                                 {treeList.map((tree) => (
                                     <tr key={tree.id} className="border-b border-slate-400">
-                                        <td className="p-2" align="left">
-                                            {tree.name}
+                                        <td className="p-2 flex items-center gap-[40px]" align="left">
+                                            <p>{tree.key}</p>
+                                            <p>{tree.name}</p>
                                         </td>
                                         <td
                                             className={`p-2 ${

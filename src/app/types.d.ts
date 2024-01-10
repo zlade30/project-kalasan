@@ -18,6 +18,7 @@ declare global {
 
     type TreeProps = {
         id?: string;
+        key?: number;
         name: string;
         path: google.maps.LatLng | google.maps.LatLngLiteral;
         status: 'removed' | 'good-condition';

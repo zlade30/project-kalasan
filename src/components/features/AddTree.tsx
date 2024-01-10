@@ -12,12 +12,12 @@ import { RcFile, UploadChangeParam, UploadFile, UploadProps } from 'antd/es/uplo
 import { collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
-import { ChangeEvent, Fragment, useState } from 'react';
+import { ChangeEvent, Fragment, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFunction }) => {
     const dispatch = useDispatch();
-    const { selectedBarangay, selectedPosition, selectedTree } = useAppSelector((state) => state.app);
+    const { selectedBarangay, selectedPosition, selectedTree, trees } = useAppSelector((state) => state.app);
     const isUpdate = selectedTree?.id;
 
     const [form] = Form.useForm<TreeProps>();
@@ -26,6 +26,7 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
     const [loading, setLoading] = useState<boolean>(false);
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [selectedPhoto, setSelectedPhoto] = useState<File>();
+    const [currentNumber, setCurrentNumber] = useState(1);
 
     const onFinish = async (values: TreeProps) => {
         setSubmitting(true);
@@ -74,6 +75,7 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
         } else {
             result = await fbAddTree({
                 ...values,
+                key: currentNumber,
                 status: 'good-condition',
                 path: selectedPosition,
                 dateAdded: new Date().getTime()
@@ -156,6 +158,20 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
         form.setFieldsValue({ status: value });
     };
 
+    useEffect(() => {
+        const load = async () => {
+            if (isUpdate && selectedTree?.barangay) {
+                setCurrentNumber(selectedTree.key!);
+            } else {
+                const list = await getDocs(query(collection(db, 'trees'), where('barangay', '==', selectedBarangay)));
+                const trees: any = list.docs.map((item) => ({ id: item.id, ...item.data() }));
+                const value = trees.length === 0 ? 1 : trees.length + 1;
+                setCurrentNumber(value);
+            }
+        };
+        load();
+    }, [trees, selectedTree, isUpdate, selectedBarangay]);
+
     const UploadButton = (
         <div>
             {loading ? <LoadingOutlined /> : <PlusOutlined />}
@@ -217,6 +233,9 @@ const AddTree = ({ open, handleClose }: { open: boolean; handleClose: VoidFuncti
                 <div className="w-full h-[100px] flex flex-col items-center justify-center">
                     <Image width={100} height={100} objectFit="contain" src={treeIcon} alt="image" />
                 </div>
+                <Form.Item<TreeProps> className="w-full" label="Number">
+                    <Input disabled size="large" value={`#${currentNumber}`} />
+                </Form.Item>
                 <Form.Item<TreeProps>
                     className="w-full"
                     label="Name"
