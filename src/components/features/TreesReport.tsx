@@ -52,7 +52,7 @@ const TreesReport = forwardRef(({}, ref) => {
                                 Status
                             </th>
                             <th align="right" className="font-medium p-2">
-                                Date Planted
+                                Date Recorded
                             </th>
                         </tr>
                     </thead>
