@@ -209,7 +209,7 @@ const Page = () => {
                                             <p className="font-normal">{tree.status}</p>
                                         </div>
                                         <div className="flex items-center text-[14px] gap-[10px]">
-                                            <p className="font-medium">Date Planted:</p>
+                                            <p className="font-medium">Date Recorded:</p>
                                             <p className="font-normal">{formatDate(new Date(tree.dateAdded!))}</p>
                                         </div>
                                         <div className="flex items-center text-[14px] gap-[10px]">
